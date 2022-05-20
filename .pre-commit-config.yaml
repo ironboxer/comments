@@ -1,0 +1,68 @@
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.9.3
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-blind-except
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-datetimez
+          - flake8-debugger
+          - flake8-docstrings
+          - flake8-logging-format
+          - flake8-print
+          - flake8-pytest-style
+          - flake8-tidy-imports
+          - flake8-quotes
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
+    hooks:
+      - id: bandit
+        args: ["-ll", "-c", ".bandit.yml"]
+
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 6.4.0
+    hooks:
+      - id: pip-compile
+        name: Generate requirements.txt
+        files: ^(setup\.py|requirements\.txt)$
+        args:
+          - -i
+          - https://mirrors.cloud.tencent.com/pypi/simple/
+          - --extra-index-url
+          - https://pypi.doubanio.com/simple/
+          - --cache-dir
+          - .cache/pip-tools
+          - setup.py
+      - id: pip-compile
+        name: Generate requirements-dev.txt
+        files: ^(requirements\.txt|requirements-dev\.(in|txt))$
+        args:
+          - --cache-dir
+          - .cache/pip-tools
+          - requirements-dev.in

@@ -1,0 +1,15 @@
+[general]
+ignore=body-is-missing
+verbosity=2
+
+[title-min-length]
+min-length=5
+
+[title-max-length]
+line-length=120
+
+[body-max-line-length]
+line-length=120
+
+[ignore-by-title]
+regex=^(wip|WIP)

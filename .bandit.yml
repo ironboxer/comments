@@ -1,0 +1,3 @@
+skips:
+  - B322  # input is safe in Python 3
+  - B303  # md5
