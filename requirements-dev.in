@@ -1,7 +1,7 @@
 -c requirements.txt
 
 pip<22
-pre-commit
+pre-commit==2.15.0
 pytest
 pytest-cov
 pytest-lazy-fixture

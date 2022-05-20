@@ -11,6 +11,8 @@ exec(about_path.read_text(), about)  # nosec # nosemgrep
 requires = [
     'requests',
     'fastapi',
+    'uvicorn[standard]',
+    'pydantic[email]',
 ]
 
 tests_require = ['pytest']
