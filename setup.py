@@ -13,6 +13,7 @@ requires = [
     'fastapi',
     'uvicorn[standard]',
     'pydantic[email]',
+    'colorlog',
 ]
 
 tests_require = ['pytest']

@@ -5,7 +5,7 @@
 #    pip-compile requirements-dev.in
 #
 --index-url https://mirrors.cloud.tencent.com/pypi/simple/
---extra-index-url https://pypi.doubanio.com/simple/
+--extra-index-url https://pypi.doubanio.com/simple
 
 attrs==21.4.0
     # via pytest
