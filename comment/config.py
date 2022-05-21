@@ -13,13 +13,15 @@ class Settings(BaseSettings):
         env_file = '.env'
         env_file_encoding = 'utf-8'
 
+    SECRET_KEY: str = ''
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30 * 24 * 60
+
     MYSQL_HOST: str = 'mysql'
     MYSQL_USER: str = 'root'
     MYSQL_PASSWORD: str = 'root'
     MYSQL_PORT: str = 3306
     MYSQL_DB: str = 'comment'
 
-    SECRET_KEY: str = ''
     SQLALCHEMY_DATABASE_URI: Optional[MySQLDsn] = None
     SQLALCHEMY_ECHO: Union[bool, str] = False
 

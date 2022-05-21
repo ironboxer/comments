@@ -1,4 +1,4 @@
-import logging
+import logging.config
 
 from fastapi import FastAPI
 from starlette import status

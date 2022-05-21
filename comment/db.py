@@ -1,11 +1,13 @@
 import contextlib
 import json
+from datetime import datetime
 
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from comment.config import settings
-from comment.routers.schemas.base import jsonable_encoder
+from comment.utils.time import time_2_iso_format
 
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,
@@ -16,7 +18,11 @@ engine = create_engine(
     echo=settings.SQLALCHEMY_ECHO,  # logger level
     echo_pool=settings.SQLALCHEMY_ECHO,
     isolation_level='READ COMMITTED',
-    json_serializer=lambda obj: json.dumps(jsonable_encoder(obj)),
+    json_serializer=lambda obj: json.dumps(
+        jsonable_encoder(
+            obj, custom_encoder={datetime: lambda val: time_2_iso_format(val)}
+        )
+    ),
 )
 
 Session = sessionmaker(bind=engine, autocommit=False)

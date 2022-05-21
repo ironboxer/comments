@@ -21,6 +21,7 @@ requires = [
     'sqlalchemy-utils',
     'alembic',
     'mysqlclient',
+    'arrow',
 ]
 
 tests_require = ['pytest']

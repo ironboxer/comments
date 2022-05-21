@@ -7,6 +7,7 @@ from starlette import status
 
 class ErrorCode(str, enum.Enum):
     invalid_password = 'invalid_password'
+    object_not_found = 'object_not_found'
 
 
 class BaseCustomError(Exception):
@@ -27,6 +28,17 @@ def register_api_response(error: ApiErrorResponse):
         return klass
 
     return decorator
+
+
+@register_api_response(
+    ApiErrorResponse(
+        status.HTTP_404_NOT_FOUND,
+        ErrorCode.object_not_found,
+        '资源未找到',
+    )
+)
+class ObjectNotFound(BaseCustomError):
+    """资源未找到"""
 
 
 @register_api_response(

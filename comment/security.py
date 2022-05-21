@@ -1,10 +1,10 @@
 import hashlib
 import hmac
 from datetime import datetime
-from pathlib.context import CryptContext
 from typing import Any, Dict, Union
 
 from jose import jwt
+from passlib.context import CryptContext
 
 from comment.config import settings
 
