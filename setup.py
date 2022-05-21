@@ -14,6 +14,13 @@ requires = [
     'uvicorn[standard]',
     'pydantic[email]',
     'colorlog',
+    'passlib[argon2]',
+    'python-jose[cryptography]',
+    'python-dotenv',
+    'sqlalchemy',
+    'sqlalchemy-utils',
+    'alembic',
+    'mysqlclient',
 ]
 
 tests_require = ['pytest']

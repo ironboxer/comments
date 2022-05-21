@@ -30,5 +30,5 @@
         "uvicorn.error": {"level": "INFO"},
         "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": false}
     },
-    "filters": {"health_check_filter": {"()": "avln.server.utils.logging.HealthCheckFilter"}}
+    "filters": {"health_check_filter": {"()": "comment.utils.logging.HealthCheckFilter"}}
 }
