@@ -7,10 +7,11 @@ from comment.security import decode_jwt
 
 
 class TestAccount:
-    def test_create(self, db):
-        _id = Account.create(db, id=1, username='user1').id
+    def test_create(self, db, username1, email1):
+        _id = Account.create(db, id=1, username=username1, email=email1).id
         user = Account.get_by_id(db, _id)
-        assert user.username == 'user1'
+        assert user.username == username1
+        assert user.email == email1
         assert user.created_at
         assert user.updated_at
 
@@ -59,4 +60,4 @@ class TestAuthProvider:
             'scopes': [OAuthScope.ME],
         }
         assert token['expire_at'] == now.datetime
-        assert token['user_id'] == str(provider.account_id)
+        assert token['user_id'] == provider.account_id

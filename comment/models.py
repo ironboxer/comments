@@ -85,7 +85,8 @@ class Account(CRUDMixin, Base):
     __tablename__ = 'account'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(length=64))
+    username = Column(String(length=64), unique=True)
+    email = Column(String(length=64), unique=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
@@ -95,6 +96,12 @@ class Account(CRUDMixin, Base):
     comments = relationship(
         'Comment', back_populates='account', cascade='all, delete', lazy='dynamic'
     )
+
+    @property
+    def password_auth_provider(self) -> 'AuthProvider':
+        return self.auth_providers.filter_by(
+            auth_type=AuthProviderType.PASSWORD
+        ).first()
 
 
 class AuthProviderType:
@@ -139,17 +146,16 @@ class AuthProvider(CRUDMixin, Base):
         expire_at = expire_at or (
             arrow.utcnow().shift(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES).datetime
         )
-
         return {
             'access_token': create_access_token(
                 self.account_id, expire_at, scopes=scopes or []
             ),
             'expire_at': expire_at,
-            'user_id': str(self.account_id),
+            'user_id': self.account_id,
         }
 
     def verify_secret(self, raw_secret: str) -> bool:
-        if self.type == AuthProviderType.PASSWORD:
+        if self.auth_type == AuthProviderType.PASSWORD:
             return verify_password(raw_secret, self.hashed_secret)
 
         return False
@@ -169,4 +175,4 @@ class Comment(CRUDMixin, Base):
 
     @classmethod
     def list(cls, db: Session, **kwargs: Any) -> Query:
-        return db.query(cls).order_by(desc(cls.created_at))
+        return db.query(cls).order_by(desc(cls.id))

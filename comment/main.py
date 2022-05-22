@@ -3,8 +3,9 @@ import logging.config
 from fastapi import FastAPI
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, Response
+from starlette.responses import HTMLResponse, JSONResponse, Response
 
+from comment import routers
 from comment.__version__ import __version__
 from comment.config import settings
 from comment.docs import (
@@ -12,6 +13,7 @@ from comment.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
+from comment.exceptions import BaseCustomError, custom_errors
 
 logging.config.dictConfig(settings.LOGGING)
 
@@ -21,6 +23,7 @@ app = FastAPI(
 )
 
 app.router.redirect_slashes = False
+app.include_router(routers.router)
 
 
 @app.get('/healthz', response_class=HTMLResponse)
@@ -42,6 +45,17 @@ async def handle_http204(request: Request, call_next):
         return Response(status_code=204)
 
     return response
+
+
+@app.exception_handler(BaseCustomError)
+async def custom_error_handler(request: Request, exc: BaseCustomError):
+    if not (error := custom_errors.get(exc.__class__)):
+        raise exc
+
+    return JSONResponse(
+        status_code=error.status_code,
+        content={'code': error.code, 'message': exc.message or error.message},
+    )
 
 
 @app.get('/docs', include_in_schema=False)

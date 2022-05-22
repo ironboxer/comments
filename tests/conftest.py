@@ -7,8 +7,11 @@ from starlette.testclient import TestClient
 from alembic import command
 from alembic.config import Config
 from comment.db import engine as db_engine
+from comment.db import get_db
 from comment.main import app
-from comment.models import Account, Comment
+from comment.models import Account, AuthProvider, AuthProviderType, Comment
+from comment.security import get_password_hash
+from comment.services import AccountService, CommentService
 
 
 @pytest.fixture
@@ -36,7 +39,7 @@ def database_engine():
         drop_database(dburl)
 
 
-@pytest.fixture
+@pytest.fixture()
 def db(database_engine):
     # https://docs.sqlalchemy.org/en/14/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites
     connection = database_engine.connect()
@@ -59,11 +62,63 @@ def db(database_engine):
         connection.close()
 
 
-@pytest.fixture
-def user1(db):
-    return Account.create(db, id=1, username='user1')
+@pytest.fixture(autouse=True)
+def override_deps(db):
+    app.dependency_overrides[get_db] = lambda: db
 
 
 @pytest.fixture
-def comment1(db, user1):
-    return Comment.create(db, account_id=user1.id, content='comment1')
+def password1():
+    return 'A1@abcdef'
+
+
+@pytest.fixture
+def email1():
+    return 'foo@bar.com'
+
+
+@pytest.fixture
+def username1():
+    return 'Username1'
+
+
+@pytest.fixture
+def user1(db, username1, email1, password1):
+    account = Account.create(db, id=1, username=username1, email=email1)
+    AuthProvider.create(
+        db,
+        id=1,
+        auth_type=AuthProviderType.PASSWORD,
+        account_id=account.id,
+        hashed_secret=get_password_hash(password1),
+    )
+    return account
+
+
+@pytest.fixture
+def content1():
+    return 'comment 1'
+
+
+@pytest.fixture
+def comment1(db, user1, content1):
+    return Comment.create(db, account_id=user1.id, content=content1)
+
+
+@pytest.fixture
+def comments_10(db, user1):
+    comments = [
+        Comment.create(db, account_id=user1.id, content=f'comment {i}')
+        for i in range(10)
+    ]
+    return comments
+
+
+@pytest.fixture
+def account_service(db):
+    return AccountService(db)
+
+
+@pytest.fixture
+def comment_service(db):
+    return CommentService(db)
