@@ -53,7 +53,7 @@ class TestAccountService:
 
 class TestCommentService:
     def test_list(self, comment_service, comment1):
-        comments = comment_service.list()
+        comments = list(comment_service.list())
         assert len(comments) == 1
         assert comments[0].id == comment1.id
 

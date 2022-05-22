@@ -1,9 +1,17 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from comment.db import get_db
-from comment.schemas import LoginPayload, LoginResp, RegisterPayload, UserRegisterResp
-from comment.services import AccountService
+from comment.schemas import (
+    CommentResp,
+    LoginPayload,
+    LoginResp,
+    RegisterPayload,
+    UserRegisterResp,
+)
+from comment.services import AccountService, CommentService
 
 router = APIRouter()
 
@@ -28,3 +36,11 @@ def login(
     svc = AccountService(db)
     login_info = svc.login(payload.password, payload.username, payload.email)
     return login_info.dict()
+
+
+@router.get('/comments', response_model=List[CommentResp])
+def list_comments(db: Session = Depends(get_db)):
+    """获取全部留言"""
+    svc = CommentService(db)
+    comments = svc.list()
+    return CommentResp.batch_serialize(comments)

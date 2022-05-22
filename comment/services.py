@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Iterable, Optional
 
 from sqlalchemy.orm import Session
 
@@ -57,8 +57,8 @@ class AccountService(BaseService):
 
 
 class CommentService(BaseService):
-    def list(self) -> List[Comment]:
-        return Comment.list(self.db).all()
+    def list(self) -> Iterable[Comment]:
+        return Comment.list(self.db)
 
     def create(
         self, account: Account, content: str, reply_id: Optional[int] = None

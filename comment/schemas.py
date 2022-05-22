@@ -1,10 +1,12 @@
 import re
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, root_validator, validator
 
 from comment.exceptions import PasswordInvalidFormat
+from comment.models import Account, Comment
+from comment.utils.time import time_2_iso_format
 
 
 class RegisterPayload(BaseModel):
@@ -58,11 +60,52 @@ class LoginResp(BaseModel):
     expire_at: datetime
 
 
-class UserRegisterResp(BaseModel):
+class UserInfo(BaseModel):
     id: int
     username: str
-    email: str
-    created_at: datetime
 
     class Config:
         orm_mode = True
+
+    @classmethod
+    def serialize(cls, user: Account) -> Dict[str, Any]:
+        return {
+            'id': user.id,
+            'username': user.username,
+        }
+
+
+class UserRegisterResp(UserInfo):
+    email: str
+    created_at: datetime
+
+    @classmethod
+    def serialize(cls, user: Account) -> Dict[str, Any]:
+        return {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'created_at': time_2_iso_format(user.created_at),
+        }
+
+
+class CommentResp(BaseModel):
+    id: int
+    reply_id: Optional[int] = None
+    content: str
+    created_at: datetime
+    user: UserInfo
+
+    @classmethod
+    def serialize(cls, comment: Comment) -> Dict[str, Any]:
+        return {
+            'id': comment.id,
+            'reply_id': comment.reply_id,
+            'content': comment.content,
+            'created_at': time_2_iso_format(comment.created_at),
+            'user': UserInfo.serialize(comment.account),
+        }
+
+    @classmethod
+    def batch_serialize(cls, comments: Iterable[Comment]) -> List[Dict[str, Any]]:
+        return [cls.serialize(comment) for comment in comments]

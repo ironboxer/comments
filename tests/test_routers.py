@@ -1,6 +1,9 @@
 import pytest
 from starlette import status
 
+from comment.schemas import CommentResp
+from comment.utils.time import time_2_iso_format
+
 
 def test_register(mocker, client, username1, email1, password1):
     payload = {'username': username1, 'email': email1, 'password': password1}
@@ -38,3 +41,31 @@ def test_login(mocker, client, user1, password1, username, email):
         'token_type': 'Bearer',
         'expire_at': mocker.ANY,
     }
+
+
+class TestComment:
+    def test_list(self, client, comment1):
+        resp = client.get('/comments')
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert len(data) == 1
+        assert data == [
+            {
+                'id': comment1.id,
+                'reply_id': comment1.reply_id,
+                'content': comment1.content,
+                'created_at': time_2_iso_format(comment1.created_at),
+                'user': {
+                    'id': comment1.account.id,
+                    'username': comment1.account.username,
+                },
+            }
+        ]
+
+    def test_list_multi_comments(self, client, comments_10):
+        resp = client.get('/comments')
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert len(data) == len(comments_10)
+        for a, b in zip(data, comments_10[::-1]):
+            assert a == CommentResp.serialize(b)
