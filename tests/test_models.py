@@ -29,10 +29,15 @@ class TestAccount:
 
 
 class TestComment:
-    def test_create(self, db, user1):
-        _id = Comment.create(db, account_id=user1.id, content='hello').id
+    def test_create(self, db, user1, content1):
+        _id = Comment.create(
+            db,
+            account_id=user1.id,
+            content=content1,
+            user_info={'id': user1.id, 'username': user1.username},
+        ).id
         comment = Comment.get_by_id(db, _id)
-        assert comment.content == 'hello'
+        assert comment.content == content1
 
     def test_update(self, db, comment1):
         with pytest.raises(NotImplementedError):
@@ -43,7 +48,7 @@ class TestComment:
             comment1.delete()
 
     def test_list(self, db, comment1):
-        comments = Comment.list(db).all()
+        comments = list(Comment.list(db))
         assert len(comments) == 1
 
 

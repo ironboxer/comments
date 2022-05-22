@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 from starlette import status
@@ -30,7 +30,6 @@ credentials_exception = HTTPException(
 
 
 def get_current_user(
-    security_scopes: SecurityScopes,
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme),
 ) -> Account:

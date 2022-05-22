@@ -55,10 +55,11 @@ class TestComment:
                 'reply_id': comment1.reply_id,
                 'content': comment1.content,
                 'created_at': time_2_iso_format(comment1.created_at),
-                'user': {
+                'user_info': {
                     'id': comment1.account.id,
                     'username': comment1.account.username,
                 },
+                'sub_comments': [],
             }
         ]
 
@@ -87,12 +88,32 @@ class TestComment:
             'content': content,
             'reply_id': None,
             'created_at': mocker.ANY,
-            'user': {
+            'user_info': {
                 'id': user1.id,
                 'username': user1.username,
             },
+            'sub_comments': [],
         }
 
     def test_create_without_auth(self, client):
         resp = client.post('/comments', json={'content': 'hello'})
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_list_mass_comments(self, client, comments_10k):
+        # performance test
+        resp = client.get('/comments')
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.json()
+        assert len(data) == len(comments_10k)
+
+    def test_list_mass_nested_comments(self, client, comments_mass_nested):
+        resp = client.get('/comments')
+        assert resp.status_code == status.HTTP_200_OK
+        comments = resp.json()
+        assert len(comments) == 1
+        comment = comments[0]
+        while sub_comments := comment['sub_comments']:
+            assert len(sub_comments) == 1
+            sub_comment = sub_comments[0]
+            assert sub_comment['reply_id'] == comment['id']
+            comment = sub_comment

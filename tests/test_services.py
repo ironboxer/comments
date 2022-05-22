@@ -7,6 +7,7 @@ from comment.exceptions import (
     UsernameAlreadyUsed,
     UsernameEmailCannotBothBeNone,
 )
+from comment.schemas import CommentResp
 
 
 class TestAccountService:
@@ -53,18 +54,36 @@ class TestAccountService:
 
 class TestCommentService:
     def test_list(self, comment_service, comment1):
-        comments = list(comment_service.list())
+        comments = comment_service.list()
         assert len(comments) == 1
-        assert comments[0].id == comment1.id
+        assert comments == [CommentResp.serialize(comment1)]
 
     def test_list_by_order(self, comment_service, comments_10):
         comments = comment_service.list()
-        assert comments[::-1] == comments_10
+        assert comments == [CommentResp.serialize(c) for c in comments_10[::-1]]
 
     def test_create(self, comment_service, user1, content1):
         comment = comment_service.create(user1, content1)
         assert comment.content == content1
 
+    def test_create_for_reply(self, comment_service, comment1, user2, content2):
+        comment = comment_service.create(user2, content2, comment1.id)
+        assert comment.reply_id == comment1.id
+
     def test_create_with_incorrect_reply_id(self, comment_service, user1, content1):
         with pytest.raises(CommentReplyIdIncorrect):
             comment_service.create(user1, content1, 12345)
+
+    def test_list_mass_comments(self, comment_service, comments_10k):
+        comments = comment_service.list()
+        assert len(comments) == len(comments_10k)
+
+    def test_list_mass_nested_comments(self, comment_service, comments_mass_nested):
+        comments = comment_service.list()
+        assert len(comments) == 1
+        comment = comments[0]
+        while sub_comments := comment['sub_comments']:
+            assert len(sub_comments) == 1
+            sub_comment = sub_comments[0]
+            assert sub_comment['reply_id'] == comment['id']
+            comment = sub_comment

@@ -32,7 +32,7 @@ release:
 	semantic-release publish
 
 ci-test:
-	pytest -rs -vvv --durations 3 --cov=comment/ tests/
+	pytest -rs -vvv --durations 10 --cov=comment/ tests/
 	coverage xml
 
 test:

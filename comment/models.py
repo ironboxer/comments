@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
+from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 import arrow
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, desc, func
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, desc, func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import (
+from sqlalchemy.orm import (  # joinedload,
     Query,
     Session,
     declarative_base,
@@ -168,6 +168,7 @@ class Comment(CRUDMixin, Base):
     account_id = Column(Integer, ForeignKey('account.id'))
     reply_id = Column(Integer, nullable=True)
     content = Column(String(length=512))
+    user_info = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
@@ -175,4 +176,11 @@ class Comment(CRUDMixin, Base):
 
     @classmethod
     def list(cls, db: Session, **kwargs: Any) -> Query:
+        # 0.1s slow when data is 10k
+        # return db.query(cls).options(joinedload(cls.account)).order_by(desc(cls.id))
         return db.query(cls).order_by(desc(cls.id))
+
+    @classmethod
+    def bulk_create(cls, db: Session, comments: Iterable[Dict[str, Any]]) -> None:
+        objects = [cls(**comment) for comment in comments]
+        db.bulk_save_objects(objects)

@@ -12,7 +12,7 @@ from comment.exceptions import (
     UsernameEmailCannotBothBeNone,
 )
 from comment.models import Account, AuthProvider, AuthProviderType, Comment
-from comment.schemas import LoginInfo
+from comment.schemas import CommentResp, LoginInfo, UserInfo
 from comment.security import get_password_hash
 
 
@@ -57,8 +57,18 @@ class AccountService(BaseService):
 
 
 class CommentService(BaseService):
-    def list(self) -> Iterable[Comment]:
-        return Comment.list(self.db)
+    def list(self) -> Iterable[CommentResp]:
+        result = []
+        comments = Comment.list(self.db).all()
+        comments_dict = {c.id: CommentResp.serialize(c) for c in comments}
+        for comment in comments:
+            comment_dic = comments_dict[comment.id]
+            if comment.reply_id:
+                comments_dict[comment.reply_id]['sub_comments'].append(comment_dic)
+            else:
+                result.append(comment_dic)
+
+        return result
 
     def create(
         self, account: Account, content: str, reply_id: Optional[int] = None
@@ -69,7 +79,12 @@ class CommentService(BaseService):
             except ObjectNotFound:
                 raise CommentReplyIdIncorrect
 
+        user_info = UserInfo.serialize(account)
         comment = Comment.create(
-            self.db, content=content, reply_id=reply_id, account_id=account.id
+            self.db,
+            content=content,
+            reply_id=reply_id,
+            account_id=account.id,
+            user_info=user_info,
         )
         return comment

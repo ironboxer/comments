@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, root_validator, validator
 
@@ -94,7 +94,8 @@ class CommentResp(BaseModel):
     reply_id: Optional[int] = None
     content: str
     created_at: datetime
-    user: UserInfo
+    user_info: UserInfo
+    sub_comments: List['CommentResp'] = []
 
     @classmethod
     def serialize(cls, comment: Comment) -> Dict[str, Any]:
@@ -103,9 +104,7 @@ class CommentResp(BaseModel):
             'reply_id': comment.reply_id,
             'content': comment.content,
             'created_at': time_2_iso_format(comment.created_at),
-            'user': UserInfo.serialize(comment.account),
+            'user_info': comment.user_info,
+            # 'user_info': UserInfo.serialize(comment.account),
+            'sub_comments': [],
         }
-
-    @classmethod
-    def batch_serialize(cls, comments: Iterable[Comment]) -> List[Dict[str, Any]]:
-        return [cls.serialize(comment) for comment in comments]

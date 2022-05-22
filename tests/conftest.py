@@ -11,6 +11,7 @@ from comment.db import engine as db_engine
 from comment.db import get_db
 from comment.main import app
 from comment.models import Account, AuthProvider, AuthProviderType, Comment
+from comment.schemas import UserInfo
 from comment.security import get_password_hash
 from comment.services import AccountService, CommentService
 
@@ -69,18 +70,43 @@ def override_deps(db):
 
 
 @pytest.fixture
+def account_service(db):
+    return AccountService(db)
+
+
+@pytest.fixture
+def comment_service(db):
+    return CommentService(db)
+
+
+@pytest.fixture
 def password1():
     return 'A1@abcdef'
 
 
 @pytest.fixture
+def password2():
+    return 'B2$diau3'
+
+
+@pytest.fixture
 def email1():
-    return 'foo@bar.com'
+    return 'user1@foo.bar'
+
+
+@pytest.fixture
+def email2():
+    return 'user2@foo.bar'
 
 
 @pytest.fixture
 def username1():
     return 'Username1'
+
+
+@pytest.fixture
+def username2():
+    return 'Username2'
 
 
 @pytest.fixture
@@ -97,32 +123,94 @@ def user1(db, username1, email1, password1):
 
 
 @pytest.fixture
+def user2(db, username2, email2, password2):
+    account = Account.create(db, id=2, username=username2, email=email2)
+    AuthProvider.create(
+        db,
+        id=2,
+        auth_type=AuthProviderType.PASSWORD,
+        account_id=account.id,
+        hashed_secret=get_password_hash(password2),
+    )
+    return account
+
+
+@pytest.fixture
 def content1():
     return 'comment 1'
 
 
 @pytest.fixture
-def comment1(db, user1, content1):
-    return Comment.create(db, account_id=user1.id, content=content1)
+def content2():
+    return 'comment 2'
 
 
 @pytest.fixture
-def comments_10(db, user1):
+def comment1(comment_service, user1, content1):
+    return comment_service.create(user1, content1)
+
+
+@pytest.fixture
+def comments_10(comment_service, user1):
     comments = [
-        Comment.create(db, account_id=user1.id, content=f'comment {i}')
-        for i in range(10)
+        comment_service.create(user1, content=f'comment {i}') for i in range(10)
     ]
     return comments
 
 
 @pytest.fixture
-def account_service(db):
-    return AccountService(db)
+def comments_10k(db, user1):
+    # for performance test
+    comments = [
+        {
+            'content': f'content {i}',
+            'account_id': user1.id,
+            'user_info': UserInfo.serialize(user1),
+        }
+        for i in range(10_000)
+    ]
+    Comment.bulk_create(db, comments)
+    return comments
 
 
 @pytest.fixture
-def comment_service(db):
-    return CommentService(db)
+def comments_mass_nested(db, user1):
+    """# noqa:D205
+    [
+        {
+            'id': 1,
+            'sub_comments: [
+                {
+                    'id': 2,
+                    'sub_comments': [
+                        {
+                            'id': 3,
+                            ...
+                        }
+                    ]
+                }
+            ]
+        },
+    ]
+    """
+    comments = [
+        {
+            'id': i,
+            'reply_id': i - 1,
+            'content': f'content {i}',
+            'account_id': user1.id,
+            'user_info': UserInfo.serialize(user1),
+        }
+        # Python>=3.9.6 maximum recursion depth == 995
+        # Pydantic
+        # RecursionError: maximum recursion depth exceeded while calling a Python object
+        # Javascript Maximum call stack size exceed == 11387 Chrome (101.0.4951.5)
+        # Uncaught RangeError: Maximum call stack size exceeded
+        for i in range(1, 75 + 1)
+    ]
+    comments[0]['reply_id'] = None
+    Comment.bulk_create(db, comments)
+    return comments
 
 
 @pytest.fixture

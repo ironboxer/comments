@@ -47,7 +47,7 @@ def list_comments(db: Session = Depends(get_db)):
     """获取全部留言"""
     svc = CommentService(db)
     comments = svc.list()
-    return CommentResp.batch_serialize(comments)
+    return comments
 
 
 @router.post(
