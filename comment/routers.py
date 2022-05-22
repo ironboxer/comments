@@ -2,12 +2,16 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from starlette import status
 
+from comment.auth import get_current_user
 from comment.db import get_db
+from comment.models import Account
 from comment.schemas import (
+    CommentPayload,
     CommentResp,
+    LoginInfo,
     LoginPayload,
-    LoginResp,
     RegisterPayload,
     UserRegisterResp,
 )
@@ -24,10 +28,10 @@ def register(
     """用户注册"""
     svc = AccountService(db)
     account = svc.register(payload.username, payload.email, payload.password)
-    return UserRegisterResp.from_orm(account).dict()
+    return UserRegisterResp.serialize(account)
 
 
-@router.post('/login', response_model=LoginResp)
+@router.post('/login', response_model=LoginInfo)
 def login(
     payload: LoginPayload,
     db: Session = Depends(get_db),
@@ -44,3 +48,17 @@ def list_comments(db: Session = Depends(get_db)):
     svc = CommentService(db)
     comments = svc.list()
     return CommentResp.batch_serialize(comments)
+
+
+@router.post(
+    '/comments', response_model=CommentResp, status_code=status.HTTP_201_CREATED
+)
+def post_comment(
+    payload: CommentPayload,
+    db: Session = Depends(get_db),
+    login: Account = Depends(get_current_user),
+):
+    """创建留言"""
+    svc = CommentService(db)
+    comment = svc.create(login, payload.content, payload.reply_id)
+    return CommentResp.serialize(comment)

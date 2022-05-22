@@ -6,6 +6,7 @@ from starlette.testclient import TestClient
 
 from alembic import command
 from alembic.config import Config
+from comment.auth import OAuthScope
 from comment.db import engine as db_engine
 from comment.db import get_db
 from comment.main import app
@@ -122,3 +123,16 @@ def account_service(db):
 @pytest.fixture
 def comment_service(db):
     return CommentService(db)
+
+
+@pytest.fixture
+def access_token1(user1):
+    return user1.password_auth_provider.create_oauth_token(scopes=[OAuthScope.ME])[
+        'access_token'
+    ]
+
+
+@pytest.fixture
+def authed_client(client, access_token1):
+    client.headers['Authorization'] = f'Bearer {access_token1}'
+    return client

@@ -53,7 +53,7 @@ class CommentPayload(BaseModel):
     content: str = Field(min_length=3, max_length=200, description='留言')
 
 
-class LoginResp(BaseModel):
+class LoginInfo(BaseModel):
     user_id: int
     access_token: str
     token_type: str = 'Bearer'

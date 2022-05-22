@@ -69,3 +69,30 @@ class TestComment:
         assert len(data) == len(comments_10)
         for a, b in zip(data, comments_10[::-1]):
             assert a == CommentResp.serialize(b)
+
+    @pytest.mark.parametrize(
+        'content',
+        [
+            'hello',
+            'wonderful',
+            'give me a like',
+        ],
+    )
+    def test_create(self, mocker, authed_client, user1, content):
+        resp = authed_client.post('/comments', json={'content': content})
+        assert resp.status_code == status.HTTP_201_CREATED
+        data = resp.json()
+        assert data == {
+            'id': mocker.ANY,
+            'content': content,
+            'reply_id': None,
+            'created_at': mocker.ANY,
+            'user': {
+                'id': user1.id,
+                'username': user1.username,
+            },
+        }
+
+    def test_create_without_auth(self, client):
+        resp = client.post('/comments', json={'content': 'hello'})
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED

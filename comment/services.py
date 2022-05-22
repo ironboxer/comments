@@ -12,7 +12,7 @@ from comment.exceptions import (
     UsernameEmailCannotBothBeNone,
 )
 from comment.models import Account, AuthProvider, AuthProviderType, Comment
-from comment.schemas import LoginResp
+from comment.schemas import LoginInfo
 from comment.security import get_password_hash
 
 
@@ -39,7 +39,7 @@ class AccountService(BaseService):
 
     def login(
         self, password: str, username: Optional[str] = None, email: Optional[str] = None
-    ) -> LoginResp:
+    ) -> LoginInfo:
         if not (username or email):
             raise UsernameEmailCannotBothBeNone
 
@@ -53,7 +53,7 @@ class AccountService(BaseService):
             raise PasswordIncorrect
 
         token = provider.create_oauth_token(scopes=[OAuthScope.ME])
-        return LoginResp(**token)
+        return LoginInfo(**token)
 
 
 class CommentService(BaseService):
