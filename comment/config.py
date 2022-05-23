@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Optional[MySQLDsn] = None
     SQLALCHEMY_ECHO: Union[bool, str] = False
 
+    DEFAULT_COMMENTS_COUNT: int = 1000 + 1
+
     @validator('SQLALCHEMY_DATABASE_URI', pre=True)
     def generate_db_url(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):

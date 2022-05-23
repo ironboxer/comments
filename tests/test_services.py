@@ -77,13 +77,3 @@ class TestCommentService:
     def test_list_mass_comments(self, comment_service, comments_10k):
         comments = comment_service.list()
         assert len(comments) == len(comments_10k)
-
-    def test_list_mass_nested_comments(self, comment_service, comments_mass_nested):
-        comments = comment_service.list()
-        assert len(comments) == 1
-        comment = comments[0]
-        while sub_comments := comment['sub_comments']:
-            assert len(sub_comments) == 1
-            sub_comment = sub_comments[0]
-            assert sub_comment['reply_id'] == comment['id']
-            comment = sub_comment

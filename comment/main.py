@@ -1,35 +1,54 @@
 import logging.config
 
+import uvicorn
 from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, JSONResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
+from starlette.staticfiles import StaticFiles
 
 from comment import routers
 from comment.__version__ import __version__
+from comment.bootstrap import bootstrap
 from comment.config import settings
 from comment.docs import (
     get_redoc_html,
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
-from comment.exceptions import BaseCustomError, custom_errors
+from comment.exceptions import BaseCustomError, ErrorCode, custom_errors
 
 logging.config.dictConfig(settings.LOGGING)
+
+LOGGER = logging.getLogger(__file__)
 
 app = FastAPI(
     title='Comment System',
     version=__version__,
+    debug=True,
 )
 
 app.router.redirect_slashes = False
 app.include_router(routers.router)
+app.mount('/', StaticFiles(directory='static', html=True), name='static')
 
 
-@app.get('/healthz', response_class=HTMLResponse)
-async def health():
-    """For Health Check"""
-    return ''
+# @app.on_event('startup')
+# def startup_event():
+#    LOGGER.info('on startup_event')
+#    bootstrap()
+
+
+# @app.on_event("shutdown")
+# def shutdown_event():
+#    teardown()
+
+
+@app.get('/', response_class=RedirectResponse)
+async def index(request: Request):
+    return request.url + '/index.html'
 
 
 @app.middleware('http')
@@ -45,6 +64,22 @@ async def handle_http204(request: Request, call_next):
         return Response(status_code=204)
 
     return response
+
+
+@app.exception_handler(RequestValidationError)
+async def req_validation_error_handler(request: Request, exc: RequestValidationError):
+    """为了统一错误信息格式, 自定义 RequestValidationError 异常处理。"""
+    errors = exc.errors()
+    msg = '\n'.join([err['loc'][-1] + ': ' + err['msg'] for err in errors])
+
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            'code': ErrorCode.request_validation_error,
+            'message': msg,
+            'detail': jsonable_encoder(errors),
+        },
+    )
 
 
 @app.exception_handler(BaseCustomError)
@@ -83,3 +118,8 @@ async def custom_redoc_html():
         title=app.title + ' - ReDoc',
         redoc_js_url='https://unpkg.com/redoc@2.0.0-rc.58/bundles/redoc.standalone.js',
     )
+
+
+if __name__ == '__main__':
+    bootstrap()
+    uvicorn.run('comment.main:app', port=8000, reload=True, access_log=True)

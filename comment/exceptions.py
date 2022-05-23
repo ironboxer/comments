@@ -6,6 +6,7 @@ from starlette import status
 
 
 class ErrorCode(str, enum.Enum):
+    request_validation_error = 'request_validation_error'
     object_not_found = 'object_not_found'
     password_invalid_format = 'password_invalid_format'
     password_incorrect = 'password_incorrect'
@@ -20,9 +21,7 @@ class BaseCustomError(Exception):
         self.message = message
 
 
-ApiErrorResponse = namedtuple(
-    'ApiErrorResponse', ['status_code', 'error_code', 'error_message']
-)
+ApiErrorResponse = namedtuple('ApiErrorResponse', ['status_code', 'code', 'message'])
 custom_errors: Dict[Type[BaseCustomError], ApiErrorResponse] = {}
 
 

@@ -16,11 +16,6 @@ from comment.security import get_password_hash
 from comment.services import AccountService, CommentService
 
 
-@pytest.fixture
-def client():
-    return TestClient(app)
-
-
 @pytest.fixture(scope='session')
 def database_engine():
     # some implementation problem: alembic config has 'sqlalchemy.url'
@@ -67,6 +62,11 @@ def db(database_engine):
 @pytest.fixture(autouse=True)
 def override_deps(db):
     app.dependency_overrides[get_db] = lambda: db
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
 
 
 @pytest.fixture

@@ -5,6 +5,12 @@ from comment.schemas import CommentResp
 from comment.utils.time import time_2_iso_format
 
 
+def test_health(client):
+    resp = client.get('/healthz')
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.text == ''
+
+
 def test_register(mocker, client, username1, email1, password1):
     payload = {'username': username1, 'email': email1, 'password': password1}
     resp = client.post('/register', json=payload)
@@ -41,6 +47,23 @@ def test_login(mocker, client, user1, password1, username, email):
         'token_type': 'Bearer',
         'expire_at': mocker.ANY,
     }
+
+
+def test_user(authed_client, user1):
+    resp = authed_client.get('/user')
+    assert resp.status_code == status.HTTP_200_OK
+    data = resp.json()
+    assert data == {
+        'id': user1.id,
+        'username': user1.username,
+        'email': user1.email,
+        'created_at': time_2_iso_format(user1.created_at),
+    }
+
+
+def test_user_without_auth(client, user1):
+    resp = client.get('/user')
+    assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class TestComment:
@@ -105,15 +128,3 @@ class TestComment:
         assert resp.status_code == status.HTTP_200_OK
         data = resp.json()
         assert len(data) == len(comments_10k)
-
-    def test_list_mass_nested_comments(self, client, comments_mass_nested):
-        resp = client.get('/comments')
-        assert resp.status_code == status.HTTP_200_OK
-        comments = resp.json()
-        assert len(comments) == 1
-        comment = comments[0]
-        while sub_comments := comment['sub_comments']:
-            assert len(sub_comments) == 1
-            sub_comment = sub_comments[0]
-            assert sub_comment['reply_id'] == comment['id']
-            comment = sub_comment

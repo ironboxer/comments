@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Comment System</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js"></script>
+</head>
+
+<body>
+  <div id="user" style="visibility: hidden;">
+    <div id="user_info"></div>
+    <button type="submit" onclick="logout()"> Logout?</button>
+  </div>
+  <div id="user_form">
+    <!-- <form> -->
+      <div class="container">
+        <label>Username : </label>
+        <input type="text" name="username" id="username">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" id="email">
+        <label>Password : </label>
+        <input type="password" name="password" id="password" required>
+        <button type="submit" onclick="login()">Login</button>
+        <input type="checkbox" id="remember_me" checked="checked" > Remember me
+        <label>没有账号？注册 : </label>
+        <button type="submit" onclick="register()">Register</button>
+      </div>
+    <!-- </form> -->
+  </div>
+  <div id="comment" style="white-space: nowrap;">
+    <ul id="comment_list">
+
+    </ul>
+  </div>
+
+  <script>
+    var origin_url = window.location.origin;
+    $(document).ready(function () {
+      getUser(displayUser);
+      fetchComments();
+    });
+
+    function fetchComments() {
+      $.getJSON(origin_url + "/comments", function (data) {
+        var comments = prepareComments(data);
+        $("#comment_list").empty();
+        renderComments($("#comment_list"), comments);
+      });
+    }
+
+
+    function getUser(callback) {
+
+      var  access_token = $.cookie("access_token");
+      console.log(access_token, $.isEmptyObject(access_token));
+      if ($.isEmptyObject(access_token)) {
+        // callback(null);
+        return;
+      }
+      $.ajax({
+          headers: {
+            "Authorization": "Bearer " + access_token,
+          },
+          url: origin_url + "/user",
+          type: "GET",
+          success: function (data, textStatus, jqXHR) {
+            console.log(data);
+            callback(data);
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            alert(textStatus, errorThrown, jqXHR);
+          },
+        });
+    }
+
+
+    function renderComments(parent, comments) {
+      for (var i = 0; i < comments.length; i++) {
+        var comment_id = comments[i].id;
+        var content = comments[i].content;
+        var user_info = comments[i].user_info;
+        var username = user_info.username;
+        var created_at = comments[i].created_at;
+        var sub_comments = comments[i].sub_comments;
+        var str = content + " | " + username + " | " + created_at;
+        //var reply_span = "<span id='span_"+comment_id+"'></span>"
+        var reply_btn = "<button onclick='reply("+comment_id+")' id='btn_"+comment_id+"'>留言</button>";
+        var new_comment = $("<li id='comment_" + comment_id + "'><div>" + str + reply_btn + "</div><ul></ul></li>");
+        parent.append(new_comment);
+        renderComments($(new_comment.find('>ul')), sub_comments);
+      }
+    }
+
+    function prepareComments(data) {
+      var result = [];
+      var memo = {};
+      for (var i = 0; i < data.length; i++) {
+        memo[data[i].id] = data[i];
+      }
+      for (var i = 0; i < data.length; i++) {
+        var reply_id = data[i].reply_id;
+        if (reply_id == null) {
+          result.push(data[i]);
+        } else {
+          memo[reply_id].sub_comments.push(data[i]);
+        }
+      }
+      // console.log(result);
+      return result;
+    }
+
+    function displayUser(userInfo) {
+      if ($.isEmptyObject(userInfo)) {
+        console.log("userInfo is empty");
+        return;
+      }
+      var username = userInfo["username"];
+      var email = userInfo["email"];
+      var msg = username + " | " + email;
+      $("#user_info").text(msg);
+      $("#user").css("visibility", "visible");
+      $("#user_form").css("visibility", "hidden");
+    }
+
+    function register() {
+      var username = $("#username").val();
+      var email = $("#email").val();
+      var password = $("#password").val();
+      if (!username) {
+        alert("username不可为空，只能使用字母和数字，长度在5~20之间");
+        return;
+      }
+      if (!email) {
+        alert("email不可为空，格式要正确");
+        return;
+      }
+      if (!password) {
+        alert("password不可为空，长度在8~20之间，至少包含一个大写、一个小写、一个数字、一个特殊符号");
+        return;
+      }
+      var payload = { username: username, email: email, password: password };
+      $.ajax(
+        origin_url + "/register", {
+        type: "POST",
+        data: JSON.stringify(payload),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data, textStatus, jqXHR) {
+          console.log(data, textStatus, jqXHR);
+          // displayUser(data);
+          alert("注册成功，请登录");
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log(jqXHR);
+          alert(jqXHR.responseJSON.message);
+        },
+      });
+    }
+
+    function login() {
+        var username = $("#username").val();
+        var email = $("#email").val();
+        var password = $("#password").val();
+        var remember_me = $("#remember_me").val();
+        if (!username && !email) {
+          alert("username 和 email 不能同时为空");
+          return;
+        }
+        if (!password) {
+          alert("password不可为空");
+          return;
+        }
+        var payload = {password: password };
+        if (username != "") {
+          payload["username"] = username;
+        } else {
+          payload["email"] = email;
+        }
+        $.ajax(
+          origin_url + "/login", {
+          type: "POST",
+          data: JSON.stringify(payload),
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          success: function (data, textStatus, jqXHR) {
+            console.log(data, textStatus, jqXHR);
+            var options = {path: "/"};
+            if ($("#remember_me").is(":checked")){
+              options["expires"] = 30;
+              console.log('checked');
+            }
+            console.log(options);
+            $.cookie("access_token", data.access_token, options);
+            getUser(function(data) {
+              if (data) {
+                displayUser(data);
+              }
+            })
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            alert(textStatus, errorThrown, jqXHR);
+          },
+        });
+    }
+
+    function logout() {
+      $.cookie("access_token", "", { path: '/' });
+      $("#user_info").text("");
+      $("#user").css("visibility", "hidden");
+      $("#user_form").css("visibility", "visible");
+    }
+
+
+    function reply(comment_id) {
+      // var comment_id =  $(this).id.split("-")[1];
+      var textarea = '<div id="text_block_'+comment_id+'"><textarea minlength="3" maxlength="200" id="textarea_'+comment_id+'"></textarea><div><button type="submit" onclick="submit_reply('+comment_id+')">提交</button><div style="display: inline; margin-left:10px;" id="counter_'+comment_id+'"></div></div></div>'
+      $("#btn_" + comment_id).parent().append(textarea);
+
+      $('#textarea_' + comment_id).bind('input', function() {
+        const maxLength = $(this).attr('maxlength');
+        const currentLength = $(this).val().length;
+        $('#counter_' + comment_id).text(`${currentLength}/${maxLength}`);
+      });
+    }
+
+    function submit_reply(reply_id) {
+      var comment = $("#textarea_" + reply_id).val();
+      if (comment.length < 3 || comment.length > 200) {
+        alert("留言长度应在3到200之间");
+      }
+      var payload = {content: comment, reply_id: reply_id}
+      var access_token = $.cookie("access_token");
+      if ($.isEmptyObject(access_token)) {
+        alert("请先登陆");
+        return;
+      }
+      $.ajax({
+        headers: {
+          "Authorization": "Bearer " + access_token,
+        },
+        url: origin_url + "/comments",
+        type: "POST",
+        data: JSON.stringify(payload),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data, textStatus, jqXHR) {
+          console.log(data, textStatus, jqXHR);
+          // displayUser(data);
+          // alert("留言成功");
+          fetchComments();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log(jqXHR);
+          alert(jqXHR.responseJSON.message);
+        },
+      });
+    }
+  </script>
+</body>
+
+</html>

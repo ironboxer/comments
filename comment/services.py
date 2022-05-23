@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from sqlalchemy.orm import Session
 
@@ -57,18 +57,9 @@ class AccountService(BaseService):
 
 
 class CommentService(BaseService):
-    def list(self) -> Iterable[CommentResp]:
-        result = []
+    def list(self) -> Iterable[Dict[str, Any]]:
         comments = Comment.list(self.db).all()
-        comments_dict = {c.id: CommentResp.serialize(c) for c in comments}
-        for comment in comments:
-            comment_dic = comments_dict[comment.id]
-            if comment.reply_id:
-                comments_dict[comment.reply_id]['sub_comments'].append(comment_dic)
-            else:
-                result.append(comment_dic)
-
-        return result
+        return [CommentResp.serialize(c) for c in comments]
 
     def create(
         self, account: Account, content: str, reply_id: Optional[int] = None

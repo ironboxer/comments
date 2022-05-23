@@ -26,9 +26,9 @@
         }
     },
     "loggers": {
-        "uvicorn": {"handlers": ["default"], "level": "INFO"},
+        "uvicorn": {"handlers": ["default"], "level": "DEBUG"},
         "uvicorn.error": {"level": "INFO"},
-        "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": false}
+        "uvicorn.access": {"handlers": ["access"], "level": "DEBUG", "propagate": false}
     },
     "filters": {"health_check_filter": {"()": "comment.utils.logging.HealthCheckFilter"}}
 }

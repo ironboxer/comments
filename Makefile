@@ -39,4 +39,5 @@ test:
 	pytest -sx -vvv tests/
 
 dev-server:
-	uvicorn comment.main:app --reload
+	# uvicorn comment.main:app --reload
+	python comment/main.py

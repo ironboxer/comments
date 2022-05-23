@@ -75,7 +75,7 @@ class UserInfo(BaseModel):
         }
 
 
-class UserRegisterResp(UserInfo):
+class UserResp(UserInfo):
     email: str
     created_at: datetime
 

@@ -22,6 +22,7 @@ requires = [
     'alembic',
     'mysqlclient',
     'arrow',
+    'aiofiles',
 ]
 
 tests_require = ['pytest']
