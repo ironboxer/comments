@@ -1,5 +1,3 @@
-import hashlib
-import hmac
 from datetime import datetime
 from typing import Any, Dict, Union
 
@@ -36,11 +34,3 @@ def create_access_token(
     **custom: Dict[str, Any],
 ):
     return encode_jwt({'exp': expire, 'sub': str(subject), **custom})
-
-
-def sign(plain_text: str, secret: str = settings.SECRET_KEY) -> str:
-    return hmac.new(
-        secret.encode('utf-8'),
-        plain_text.encode('utf-8'),
-        hashlib.sha256,
-    ).hexdigest()

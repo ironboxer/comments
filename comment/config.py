@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Optional[MySQLDsn] = None
     SQLALCHEMY_ECHO: Union[bool, str] = False
 
+    DEBUG_MODE: bool = False
+    HOST: str = "127.0.0.1"
+    PORT: int = 8000
     DEFAULT_COMMENTS_COUNT: int = 1000 + 1
     DEFAULT_USERNAME: str = 'User1'
     DEFAULT_EMAIL: str = 'user1@foo.bar'

@@ -49,6 +49,11 @@ repos:
       - id: bandit
         args: ["-ll", "-c", ".bandit.yml"]
 
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.17.0
+    hooks:
+      - id: gitlint
+
   - repo: https://github.com/jazzband/pip-tools
     rev: 6.4.0
     hooks:

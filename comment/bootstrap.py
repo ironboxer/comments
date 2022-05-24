@@ -12,7 +12,7 @@ from comment.models import Account, Comment
 from comment.schemas import UserInfo
 from comment.services import AccountService
 
-LOGGER = logging.getLogger(__file__)
+LOGGER = logging.getLogger(__name__)
 
 
 def prepare_user(db: Session, username: str, email: str, password: str) -> Account:
@@ -22,13 +22,13 @@ def prepare_user(db: Session, username: str, email: str, password: str) -> Accou
     return account
 
 
-def prepare_comments(db: Session, user: Account):
+def prepare_comments(db: Session, user: Account) -> None:
     LOGGER.info('prepare comments')
     comments = [
         {
             'id': i,
             'reply_id': (i - 1) // 10 * 10,
-            'content': f'content {i}',
+            'content': f'comment {i}',
             'account_id': user.id,
             'user_info': UserInfo.serialize(user),
         }
@@ -42,7 +42,7 @@ def prepare_comments(db: Session, user: Account):
     db.commit()
 
 
-def prepare_data():
+def prepare_data() -> None:
     LOGGER.info('prepare data...')
     username, email, password = (
         settings.DEFAULT_USERNAME,
@@ -52,12 +52,12 @@ def prepare_data():
     db = DBSession()
     user = prepare_user(db, username, email, password)
     prepare_comments(db, user)
-    LOGGER.info('prepare data finished...')
     db.close()
+    LOGGER.info('prepare data finished...')
 
 
-def bootstrap():
-    LOGGER.info('boostrap')
+def bootstrap() -> None:
+    LOGGER.info('bootstrap')
     db_url = db_engine.url
     if database_exists(db_url):
         drop_database(db_url)
@@ -66,10 +66,5 @@ def bootstrap():
     alembic_config = Config('alembic.ini')
     command.upgrade(alembic_config, 'head')
     command.history(alembic_config, indicate_current=True)
+
     prepare_data()
-
-
-def teardown():
-    db_url = db_engine.url
-    if database_exists(db_url):
-        drop_database(db_url)

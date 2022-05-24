@@ -1,4 +1,3 @@
-import contextlib
 import json
 from datetime import datetime
 
@@ -30,15 +29,6 @@ Session = sessionmaker(bind=engine, autocommit=False)
 
 def get_db():
     """Database dependency"""
-    db = Session()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@contextlib.contextmanager
-def create_db():
     db = Session()
     try:
         yield db

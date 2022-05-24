@@ -6,8 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse, Response
-from starlette.staticfiles import StaticFiles
+from starlette.responses import JSONResponse, Response
 
 from comment import routers
 from comment.__version__ import __version__
@@ -18,37 +17,28 @@ from comment.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
-from comment.exceptions import BaseCustomError, ErrorCode, custom_errors
+from comment.exceptions import (
+    BaseCustomError,
+    ErrorCode,
+    ErrorResponseScheme,
+    custom_errors,
+)
 
 logging.config.dictConfig(settings.LOGGING)
 
-LOGGER = logging.getLogger(__file__)
+LOGGER = logging.getLogger(__name__)
 
 app = FastAPI(
     title='Comment System',
     version=__version__,
-    debug=True,
+    docs_url=None,
+    redoc_url=None,
+    responses={status.HTTP_400_BAD_REQUEST: {'model': ErrorResponseScheme}},
 )
+
 
 app.router.redirect_slashes = False
 app.include_router(routers.router)
-app.mount('/', StaticFiles(directory='static', html=True), name='static')
-
-
-# @app.on_event('startup')
-# def startup_event():
-#    LOGGER.info('on startup_event')
-#    bootstrap()
-
-
-# @app.on_event("shutdown")
-# def shutdown_event():
-#    teardown()
-
-
-@app.get('/', response_class=RedirectResponse)
-async def index(request: Request):
-    return request.url + '/index.html'
 
 
 @app.middleware('http')
@@ -73,7 +63,7 @@ async def req_validation_error_handler(request: Request, exc: RequestValidationE
     msg = '\n'.join([err['loc'][-1] + ': ' + err['msg'] for err in errors])
 
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_400_BAD_REQUEST,
         content={
             'code': ErrorCode.request_validation_error,
             'message': msg,
@@ -120,6 +110,33 @@ async def custom_redoc_html():
     )
 
 
+def open_browser(url):
+    import sys
+    import time
+    import webbrowser
+    from threading import Thread
+
+    if sys.platform.lower() == 'linux':
+        return
+
+    LOGGER.info('auto open browser')
+
+    def f():
+        time.sleep(1)
+        webbrowser.open(url)
+
+    t = Thread(target=f)
+    t.start()
+
+
 if __name__ == '__main__':
     bootstrap()
-    uvicorn.run('comment.main:app', port=8000, reload=True, access_log=True)
+    open_browser(f'http://{settings.HOST}:{settings.PORT}')
+    uvicorn.run(
+        'comment.main:app',
+        host=settings.HOST,
+        port=settings.PORT,
+        debug=settings.DEBUG_MODE,
+        reload=settings.DEBUG_MODE,
+        access_log=True,
+    )

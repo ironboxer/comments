@@ -1,11 +1,23 @@
 FROM python:3.9.6
 
-WORKDIR /code
+USER root
 
-COPY requirements.txt requirements-dev.txt /code/
+RUN apt-get install -y curl && \
+    apt-get update && apt-get install -y \
+    python3.9-dev default-mysql-client default-libmysqlclient-dev iputils-ping dnsutils \
+    zip silversearcher-ag telnet lsof tree openssh-client apache2-utils git git-lfs tig && \
+    apt-get clean
 
-RUN pip3 install --no-cache-dir --upgrade -r /code/requirements.txt -r /code/requirements-dev.txt
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3.9
 
-COPY ./comment /code/comment
+RUN mkdir -p /usr/src
 
-CMD ["uvicorn", "comment.main:app", "--host", "0.0.0.0", "--loop", "uvloop", "--log-config", "comment/logging.json"]
+WORKDIR /usr/src
+
+COPY requirements.txt requirements-dev.txt /usr/src/
+
+RUN python3.9 -m pip install -r requirements.txt -r requirements-dev.txt
+
+COPY . /usr/src/
+
+CMD ["python", "comment/main.py"]

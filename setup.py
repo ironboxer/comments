@@ -9,21 +9,22 @@ about_path = here / 'comment' / '__version__.py'
 exec(about_path.read_text(), about)  # nosec # nosemgrep
 
 requires = [
-    'requests',
-    'fastapi',
-    'uvicorn[standard]',
-    'pydantic[email]',
+    'aiofiles',
+    'alembic',
+    'arrow',
     'colorlog',
+    'fastapi',
+    'mysqlclient',
     'passlib[argon2]',
-    'python-jose[cryptography]',
+    'pydantic[email]',
     'python-dotenv',
+    'python-jose[cryptography]',
+    'requests',
     'sqlalchemy',
     'sqlalchemy-utils',
-    'alembic',
-    'mysqlclient',
-    'arrow',
-    'aiofiles',
+    'uvicorn[standard]',
 ]
+
 
 tests_require = ['pytest']
 
@@ -36,11 +37,10 @@ setup(
     author='Liu Taotao',
     author_email='lttzzlll@gmail.com',
     url=(
-        'https://github.com/ironboxer/'
-        'recruitment-dev-python-backend-comments-tree-homework-TaotaoLiu'
+        'https://github.com/recruitment-cn/recruitment-dev-python-backend-comments-tree-homework-TaotaoLiu'  # noqa:E501
     ),
     setup_requires=['setuptools>=38.6.0'],
-    python_requires='==3.9.6',
+    python_requires='>=3.9.5',
     packages=['comment'],
     zip_safe=False,
     install_requires=requires,

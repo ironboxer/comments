@@ -1,7 +1,8 @@
 import enum
 from collections import namedtuple
-from typing import Dict, Type
+from typing import Dict, List, Optional, Type
 
+from pydantic import BaseModel, Field
 from starlette import status
 
 
@@ -14,6 +15,20 @@ class ErrorCode(str, enum.Enum):
     username_already_used = 'username_already_used'
     email_already_used = 'email_already_used'
     comment_reply_id_incorrect = 'comment_reply_id_incorrect'
+
+
+class ErrorResponseDetailMessage(BaseModel):
+    loc: List[str] = Field(..., description='错误字段的位置')
+    msg: str = Field(..., description='错误消息')
+    type: str = Field(..., description='错误类型')
+
+
+class ErrorResponseScheme(BaseModel):
+    code: str = Field(..., description='错误代码')
+    message: str = Field(..., description='错误消息')
+    detail: Optional[List[ErrorResponseDetailMessage]] = Field(
+        None, description='可选, 详细的错误信息'
+    )
 
 
 class BaseCustomError(Exception):

@@ -4,6 +4,7 @@ from comment.exceptions import (
     CommentReplyIdIncorrect,
     EmailAlreadyUsed,
     ObjectNotFound,
+    PasswordIncorrect,
     UsernameAlreadyUsed,
     UsernameEmailCannotBothBeNone,
 )
@@ -50,6 +51,10 @@ class TestAccountService:
     def test_login(self, account_service, user1, password1, username, email):
         login_info = account_service.login(password1, username, email)
         assert login_info
+
+    def test_login_with_incorrect_passwrd(self, account_service, user1, password1):
+        with pytest.raises(PasswordIncorrect):
+            account_service.login(password1 * 2, user1.username)
 
 
 class TestCommentService:

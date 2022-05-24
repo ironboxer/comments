@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends
@@ -18,6 +19,11 @@ from comment.schemas import (
 )
 from comment.services import AccountService, CommentService
 
+here = Path(__file__).parent.parent
+with open(here / 'static/index.html') as f:
+    index_html = f.read()
+
+
 router = APIRouter()
 
 
@@ -25,6 +31,12 @@ router = APIRouter()
 async def health():
     """For Health Check"""
     return ''
+
+
+@router.get('/', response_class=HTMLResponse)
+async def index():
+    """首页"""
+    return HTMLResponse(content=index_html)
 
 
 @router.post('/register', response_model=UserResp)

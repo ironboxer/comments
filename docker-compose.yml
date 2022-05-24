@@ -1,8 +1,34 @@
 version: '3'
 services:
   web:
+    container_name: comment-web
     build: .
+    volumes:
+      - .:/usr/src
+    environment:
+       PYTHONPATH: "."
+       COMMENT_HOST: "0.0.0.0"
     ports:
       - "8000:8000"
+    command: python3.9 comment/main.py
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:8000/healthz']
+      timeout: 1s
+      retries: 3
+    restart: on-failure
+    working_dir: /usr/src
+    depends_on:
+      - mysql
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - NET_ADMIN
+
+  mysql:
+    image: "mysql:8"
+    container_name: comment-mysql
     volumes:
-      - .:/code
+      - ./deploy/mysql/my.cnf:/etc/mysql/conf.d/mysqld.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: comment

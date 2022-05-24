@@ -203,7 +203,7 @@
             })
           },
           error: function(jqXHR, textStatus, errorThrown) {
-            alert(textStatus, errorThrown, jqXHR);
+            alert(jqXHR.responseJSON.message);
           },
         });
     }

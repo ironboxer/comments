@@ -6,7 +6,6 @@ venv
 .pytest_cache
 __pycache__
 .cache
-.pytest_cache
 .coverage
 coverage.xml
 *.log

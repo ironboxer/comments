@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar
 import arrow
 from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, desc, func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import (  # joinedload,
+from sqlalchemy.orm import (
     Query,
     Session,
     declarative_base,
@@ -133,11 +133,14 @@ class AuthProvider(CRUDMixin, Base):
             .filter(cls.auth_type == auth_type, cls.account_id == account.id)
             .first()
         )
+
         if not provider:
             created = True
             provider = cls(auth_type=auth_type, account_id=account.id)
+
         db.add(provider)
         db.commit()
+
         return provider, created
 
     def create_oauth_token(

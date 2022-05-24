@@ -1,6 +1,7 @@
 import pytest
 from starlette import status
 
+from comment.exceptions import ErrorCode
 from comment.schemas import CommentResp
 from comment.utils.time import time_2_iso_format
 
@@ -9,6 +10,13 @@ def test_health(client):
     resp = client.get('/healthz')
     assert resp.status_code == status.HTTP_200_OK
     assert resp.text == ''
+
+
+def test_index(client):
+    resp = client.get('/')
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.headers.get('content-type') == 'text/html; charset=utf-8'
+    assert resp.text
 
 
 def test_register(mocker, client, username1, email1, password1):
@@ -22,6 +30,29 @@ def test_register(mocker, client, username1, email1, password1):
         'username': username1,
         'email': email1,
     }
+
+
+@pytest.mark.parametrize(
+    'password',
+    [
+        'UPPERCASE',
+        'lowercase',
+        '12345678',
+        'AaBbCcDd',
+        'A1B2C3D4',
+        'a1b2c3d4',
+        '!@#$%^&*',
+        'AAAAAAA!',
+        'aaaaaaa@',
+        '1234567#',
+    ],
+)
+def test_register_with_invalid_password_format(client, username1, email1, password):
+    payload = {'username': username1, 'email': email1, 'password': password}
+    resp = client.post('/register', json=payload)
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    data = resp.json()
+    assert data['code'] == ErrorCode.password_invalid_format
 
 
 @pytest.mark.parametrize(

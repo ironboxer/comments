@@ -17,7 +17,7 @@ from comment.security import get_password_hash
 
 
 class BaseService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session) -> None:
         self.db = db
 
 
@@ -25,6 +25,7 @@ class AccountService(BaseService):
     def register(self, username: str, email: str, password: str) -> Account:
         if Account.get(self.db, username=username):
             raise UsernameAlreadyUsed
+
         if Account.get(self.db, email=email):
             raise EmailAlreadyUsed
 
@@ -35,6 +36,7 @@ class AccountService(BaseService):
             account_id=account.id,
             hashed_secret=get_password_hash(password),
         )
+
         return account
 
     def login(
@@ -53,6 +55,7 @@ class AccountService(BaseService):
             raise PasswordIncorrect
 
         token = provider.create_oauth_token(scopes=[OAuthScope.ME])
+
         return LoginInfo(**token)
 
 
@@ -78,4 +81,5 @@ class CommentService(BaseService):
             account_id=account.id,
             user_info=user_info,
         )
+
         return comment
