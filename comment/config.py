@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     SQLALCHEMY_ECHO: Union[bool, str] = False
 
     DEFAULT_COMMENTS_COUNT: int = 1000 + 1
+    DEFAULT_USERNAME: str = 'User1'
+    DEFAULT_EMAIL: str = 'user1@foo.bar'
+    DEFAULT_PASSWORD: str = 'A1#dsa12'
 
     @validator('SQLALCHEMY_DATABASE_URI', pre=True)
     def generate_db_url(cls, v: Optional[str], values: Dict[str, Any]) -> Any:

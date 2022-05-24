@@ -44,7 +44,11 @@ def prepare_comments(db: Session, user: Account):
 
 def prepare_data():
     LOGGER.info('prepare data...')
-    username, email, password = 'User1', 'user1@foo.bar', 'A1#dsa12'
+    username, email, password = (
+        settings.DEFAULT_USERNAME,
+        settings.DEFAULT_EMAIL,
+        settings.DEFAULT_PASSWORD,
+    )
     db = DBSession()
     user = prepare_user(db, username, email, password)
     prepare_comments(db, user)
@@ -54,11 +58,11 @@ def prepare_data():
 
 def bootstrap():
     LOGGER.info('boostrap')
-    dburl = db_engine.url
-    if database_exists(dburl):
-        drop_database(dburl)
+    db_url = db_engine.url
+    if database_exists(db_url):
+        drop_database(db_url)
 
-    create_database(dburl)
+    create_database(db_url)
     alembic_config = Config('alembic.ini')
     command.upgrade(alembic_config, 'head')
     command.history(alembic_config, indicate_current=True)
@@ -66,6 +70,6 @@ def bootstrap():
 
 
 def teardown():
-    dburl = db_engine.url
-    if database_exists(dburl):
-        drop_database(dburl)
+    db_url = db_engine.url
+    if database_exists(db_url):
+        drop_database(db_url)

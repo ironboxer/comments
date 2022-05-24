@@ -21,10 +21,10 @@ def database_engine():
     # some implementation problem: alembic config has 'sqlalchemy.url'
     # point to URL in settings, this must be mocked before
     # sqlalchemy-utils do database migrations
-    dburl = db_engine.url
-    if database_exists(dburl):
-        drop_database(dburl)
-    create_database(dburl)
+    db_url = db_engine.url
+    if database_exists(db_url):
+        drop_database(db_url)
+    create_database(db_url)
     alembic_config = Config('alembic.ini')
     command.upgrade(alembic_config, 'head')
     command.history(alembic_config, indicate_current=True)
@@ -33,7 +33,7 @@ def database_engine():
         yield db_engine
     finally:
         command.downgrade(alembic_config, 'base')
-        drop_database(dburl)
+        drop_database(db_url)
 
 
 @pytest.fixture()
